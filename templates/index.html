@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCS Annual Report Chatbot</title>
+    <style>
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header with button */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, #004aad, #007bff);
+            color: white;
+            width: 100%;
+            padding: 15px 20px;
+            box-sizing: border-box;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .header button {
+            background: #ffc107;
+            color: #004aad;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .header button:hover {
+            background: #e0a800;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: 14px;
+            color: #444;
+            max-width: 800px;
+            margin: 10px auto;
+            padding: 0 15px;
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            overflow: hidden;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: #007bff;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background-color: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .input-area {
+            display: flex;
+            padding: 10px;
+            background: #f1f3f6;
+            border-top: 1px solid #ccc;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button.send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            margin-left: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button.send-btn:hover {
+            background: #0056b3;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .messages::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>TCS Annual Report Chatbot</h1>
+        <button onclick="viewAnnualReport()">View Annual Report</button>
+    </div>
+
+    <div class="instructions">
+        <p><strong>⚠️ Please ask a question related to TCS 2024–2025 annual report only.</strong></p>
+        <p>✅ Make sure to include <b>"TCS"</b> in your question so I know it is related and I can answer correctly.</p>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages" id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="question" placeholder="Type your question here..." onkeypress="handleKey(event)">
+            <button class="send-btn" onclick="sendQuestion()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById("messages");
+
+        function addMessage(content, sender) {
+            const msg = document.createElement("div");
+            msg.classList.add("message", sender);
+            msg.innerHTML = content;
+            messagesContainer.appendChild(msg);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function sendQuestion() {
+            const questionField = document.getElementById("question");
+            const question = questionField.value.trim();
+            if (!question) return;
+
+            if (!question.toLowerCase().includes("tcs")) {
+                addMessage("⚠️ Please include the word 'TCS' in your question so I can answer it.", "bot");
+                questionField.value = "";
+                return;
+            }
+
+            addMessage(question, "user");
+            questionField.value = "";
+
+            addMessage("Thinking...", "bot");
+
+            const response = await fetch("/tcs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tcs_question: question })
+            });
+
+            const data = await response.json();
+            messagesContainer.lastChild.remove();
+            addMessage(data.response, "bot");
+        }
+
+        function handleKey(e) {
+            if (e.key === "Enter") sendQuestion();
+        }
+
+        function viewAnnualReport() {
+            // Make sure PDF is in static folder
+            window.open("https://www.tcs.com/content/dam/tcs/investor-relations/financial-statements/2024-25/ar/annual-report-2024-2025.pdf");
+        }
+    </script>
+
+</body>
+</html>
